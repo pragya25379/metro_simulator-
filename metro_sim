@@ -235,6 +235,42 @@ class MetroSimulator:
                 # Find neighbors (stations next to this one on this line)
                 stations_list = self.lines[line]
                 index = stations_list.index(current_station)
+                neighbors = []
+                if index > 0: 
+                    neighbors.append(stations_list[index-1]) # Previous station
+                if index < len(stations_list) - 1: 
+                    neighbors.append(stations_list[index+1]) # Next station
+                
+                for neighbor in neighbors:
+                    travel_time = self.travel_times[(current_station, neighbor)]
+                    
+                    # Find the direction of the train
+                    if stations_list.index(neighbor) > index:
+                        direction = stations_list[-1] # Going down
+                    else:
+                        direction = stations_list[0]  # Going up
+                    
+                    # Find the next train time
+                    next_train_time = self.get_specific_train_time(line, current_station, direction, ready_to_depart_time)
+                    
+                    if next_train_time:
+                        arrival_at_neighbor = next_train_time + travel_time
+                        
+                        # Record this step
+                        new_step = {
+                            "station": current_station,
+                            "line": line,
+                            "departure": next_train_time,
+                            "next_station": neighbor
+                        }
+                        new_history = history + [new_step]
+                        
+                        paths_to_explore.append((arrival_at_neighbor, neighbor, new_history, line))
+
+        if best_journey:
+            return self.print_journey(best_journey, start_station, end_station)
+        else:
+            return "No route found."
     def get_specific_train_time(self, line, station, direction_end, time_after):
         """Helper to find the next train time for a specific direction."""
         stations = self.lines[line]
