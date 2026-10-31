@@ -10,3 +10,11 @@ def parse_time(time_str):
         return hours * 60 + minutes
     except:
         return None
+def format_time(total_minutes):
+    """
+    Converts minutes from midnight back to a time string like '09:30'.
+    """
+    hours = (total_minutes // 60) % 24
+    minutes = total_minutes % 60
+    # The :02d means "format as a 2-digit number, adding a 0 in front if needed"
+    return f"{hours:02d}:{minutes:02d}"
