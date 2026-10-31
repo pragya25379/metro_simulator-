@@ -102,3 +102,51 @@ class MetroSimulator:
 
         # We need to find trains going in both directions
         results = []
+
+        # Direction 1: Towards the last station (Down)
+        last_station = stations_on_line[-1]
+        if station_name != last_station:
+            # Calculate when the first train (6:00 AM) reaches here
+            time_from_start = 0
+            
+            # Add up travel time from the first station to our station
+            station_index = stations_on_line.index(station_name)
+            for i in range(station_index):
+                s1 = stations_on_line[i]
+                s2 = stations_on_line[i+1]
+                time_from_start += self.travel_times[(s1, s2)]
+            
+            first_train_arrival = self.start_time + time_from_start
+            
+            # Find the next train after current_time
+            next_arrival = self.find_next_arrival_time(first_train_arrival, current_time)
+            
+            if next_arrival:
+                results.append({
+                    "direction": last_station,
+                    "time": next_arrival
+                })
+        # Direction 2: Towards the first station (Up)
+        first_station = stations_on_line[0]
+        if station_name != first_station:
+            # Calculate when the first train (6:00 AM) from the other end reaches here
+            time_from_end = 0
+            
+            # Add up travel time from the last station backwards to our station
+            station_index = stations_on_line.index(station_name)
+            for i in range(len(stations_on_line) - 1, station_index, -1):
+                s1 = stations_on_line[i]
+                s2 = stations_on_line[i-1]
+                time_from_end += self.travel_times[(s1, s2)]
+                
+            first_train_arrival = self.start_time + time_from_end
+            
+            next_arrival = self.find_next_arrival_time(first_train_arrival, current_time)
+            
+            if next_arrival:
+                results.append({
+                    "direction": first_station,
+                    "time": next_arrival
+                })
+                
+        return results 
