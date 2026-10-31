@@ -357,8 +357,10 @@ def main():
             line = input("Enter Line (Blue/Magenta): ").strip()
             station = input("Enter Station Name: ").strip()
             time_str = input("Enter Current Time (HH:MM): ").strip()
-            src = match_name(src, all_stations)
-            dst = match_name(dst, all_stations)
+            line = match_name(line, sim.lines)
+            station = match_name(station, all_stations)
+
+            
             
             current_min = parse_time(time_str)
             if current_min is None:
@@ -382,6 +384,8 @@ def main():
             src = input("Source Station: ").strip()
             dst = input("Destination Station: ").strip()
             time_str = input("Time of Travel (HH:MM): ").strip()
+            src = match_name(src, all_stations)
+            dst = match_name(dst, all_stations)
             
             plan = sim.plan_journey(src, dst, time_str)
             print(plan)
