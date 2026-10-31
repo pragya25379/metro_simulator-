@@ -234,7 +234,66 @@ class MetroSimulator:
                 # Find neighbors (stations next to this one on this line)
                 stations_list = self.lines[line]
                 index = stations_list.index(current_station)
+    def get_specific_train_time(self, line, station, direction_end, time_after):
+        """Helper to find the next train time for a specific direction."""
+        stations = self.lines[line]
+        idx = stations.index(station)
+        
+        if direction_end == stations[-1]: 
+            # Going towards end
+            time_from_start = 0
+            for i in range(idx):
+                time_from_start += self.travel_times[(stations[i], stations[i+1])]
+            first_arrival = self.start_time + time_from_start
+        else: 
+            # Going towards start
+            time_from_end = 0
+            for i in range(len(stations) - 1, idx, -1):
+                time_from_end += self.travel_times[(stations[i], stations[i-1])]
+            first_arrival = self.start_time + time_from_end
+            
+        return self.find_next_arrival_time(first_arrival, time_after)
+
+    def print_journey(self, journey_data, source, dest):
+        final_time, steps = journey_data
+        output = ["Journey Plan:"]
+        
+        # The first step tells us where we started
+        first_step = steps[0]
+        current_line = first_step['line']
+        
+        output.append(f"Start at {source} ({current_line} Line)")
+        output.append(f"Next metro at {format_time(first_step['departure'])}")
+        
+        # Loop through the steps to find interchanges
+        for i in range(len(steps)):
+            step = steps[i]
+            
+            # If the line changes, it means we transferred
+            if step['line'] != current_line:
+                # The previous step brought us here
+                prev_step = steps[i-1]
+                arrival_time = prev_step['departure'] + self.travel_times[(prev_step['station'], prev_step['next_station'])]
                 
+                output.append(f"Arrive at {step['station']} at {format_time(arrival_time)}")
+                output.append(f"Transfer to {step['line']} Line")
+                output.append(f"Next {step['line']} metro departs at {format_time(step['departure'])}")
+                
+                current_line = step['line']
+        
+        output.append(f"Arrive at {dest} at {format_time(final_time)}")
+        
+        # Calculate total time
+        # Start time is when the first train departed (roughly)
+        # Or better, the user's input time? We don't have it here easily.
+        # Let's use the first train departure as the start of the "trip"
+        start_time = steps[0]['departure']
+        total_minutes = final_time - start_time
+        # Note: This doesn't include the initial wait at the first station, but it's close.
+        
+        output.append(f"Total travel time: {total_minutes} minutes")
+        
+        return "\n".join(output)            
                 neighbors = []
                 if index > 0: 
                     neighbors.append(stations_list[index-1]) # Previous station
