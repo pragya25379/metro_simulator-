@@ -19,7 +19,7 @@ def format_time(total_minutes):
     # The :02d means "format as a 2-digit number, adding a 0 in front if needed"
     
     return f"{hours:02d}:{minutes:02d}"
-    def match_name(text, options):
+def match_name(text, options):
     for option in options:
         if option.lower() == text.lower():
             return option
