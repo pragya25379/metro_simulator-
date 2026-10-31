@@ -140,6 +140,13 @@ class MetroSimulator:
                 time_from_end += self.travel_times[(s1, s2)]
                 
             first_train_arrival = self.start_time + time_from_end
+            if next_arrival:
+                results.append({
+                    "direction": first_station,
+                    "time": next_arrival
+                })
+                
+        return results
     def find_next_arrival_time(self, first_train_time, current_time):
         """
         Calculates the next train arrival.
