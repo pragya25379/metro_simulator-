@@ -330,5 +330,59 @@ class MetroSimulator:
         
         output.append(f"Total travel time: {total_minutes} minutes")
         
-        return "\n".join(output)            
+        return "\n".join(output) 
+# Main Program
+def main():
+    sim = MetroSimulator()
+    if not sim.load_data():
+        return
+
+    print("Delhi Metro Simulator")
+    print("---------------------")
+    print("1. Check Metro Timings")
+    print("2. Plan a Journey")
+    print("3. Exit")
+    
+    while True:
+        choice = input("\nEnter your choice (1/2/3): ")
+        
+        if choice == '1':
+            line = input("Enter Line (Blue/Magenta): ").strip()
+            station = input("Enter Station Name: ").strip()
+            time_str = input("Enter Current Time (HH:MM): ").strip()
+            
+            current_min = parse_time(time_str)
+            if current_min is None:
+                print("Invalid time. Please use HH:MM format.")
+                continue
+                
+            trains = sim.get_next_trains(line, station, current_min)
+            if not trains:
+                print("No trains found. Check station name or line.")
+            else:
+                for t in trains:
+                    print(f"Towards {t['direction']}: Next metro at {format_time(t['time'])}")
+                    
+                    # Show subsequent trains
+                    freq = sim.get_frequency(t['time'])
+                    t2 = t['time'] + freq
+                    t3 = t2 + sim.get_frequency(t2)
+                    print(f"  Next trains at {format_time(t2)}, {format_time(t3)}")
+
+        elif choice == '2':
+            src = input("Source Station: ").strip()
+            dst = input("Destination Station: ").strip()
+            time_str = input("Time of Travel (HH:MM): ").strip()
+            
+            plan = sim.plan_journey(src, dst, time_str)
+            print(plan)
+            
+        elif choice == '3':
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
                 
