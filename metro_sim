@@ -140,13 +140,127 @@ class MetroSimulator:
                 time_from_end += self.travel_times[(s1, s2)]
                 
             first_train_arrival = self.start_time + time_from_end
+    def find_next_arrival_time(self, first_train_time, current_time):
+        """
+        Calculates the next train arrival.
+        It simulates trains starting from the first train until one arrives after current_time.
+        """
+        # The 'offset' is how long it takes to get to our station from the start of the line
+        travel_duration = first_train_time - self.start_time
+        
+        # Start simulating train departures from the origin at 6:00 AM
+        departure_time = self.start_time
+        
+        while departure_time < self.end_time:
+            # When does this train arrive at our station?
+            arrival_time = departure_time + travel_duration
             
-            next_arrival = self.find_next_arrival_time(first_train_arrival, current_time)
+            # If this train arrives after (or at) the current time, it's the one we want!
+            if arrival_time >= current_time:
+                return arrival_time
             
-            if next_arrival:
-                results.append({
-                    "direction": first_station,
-                    "time": next_arrival
-                })
+            # Otherwise, check the next train
+            frequency = self.get_frequency(departure_time)
+            departure_time += frequency
+            
+        return None
+
+    def plan_journey(self, start_station, end_station, time_str):
+        """Finds the best route between two stations."""
+        current_time = parse_time(time_str)
+        if current_time is None:
+            return "Invalid time format."
+            
+        if current_time < self.start_time or current_time >= self.end_time:
+            return "No service available (06:00 AM - 11:00 PM)."
+
+        # We use a list to keep track of paths we are exploring
+        # Each item is: (arrival_time, current_station, path_history, current_line)
+        paths_to_explore = []
+        
+        # Start at the source station
+        paths_to_explore.append((current_time, start_station, [], None))
+        
+        # Keep track of the fastest time we've reached each station to avoid loops
+        visited_stations = {} 
+        
+        best_journey = None
+        
+        while len(paths_to_explore) > 0:
+            # 1. Find the path that has the earliest arrival time so far
+            best_index = 0
+            for i in range(1, len(paths_to_explore)):
+                if paths_to_explore[i][0] < paths_to_explore[best_index][0]:
+                    best_index = i
+            
+            # Remove it from the list to process it
+            current_arrival_time, current_station, history, current_line = paths_to_explore.pop(best_index)
+            
+            # If we reached the destination, we found the best path!
+            if current_station == end_station:
+                best_journey = (current_arrival_time, history)
+                break
+            
+            # If we've been here before faster, skip this path
+            state = (current_station, current_line)
+            if state in visited_stations and visited_stations[state] <= current_arrival_time:
+                continue
+            visited_stations[state] = current_arrival_time        
+
+            # 2. Explore where we can go from here
+            
+            # Find all lines connected to this station
+            connected_lines = []
+            for line_name in self.lines:
+                if current_station in self.lines[line_name]:
+                    connected_lines.append(line_name)
+            
+            for line in connected_lines:
+                # Calculate delay if we are changing lines
+                delay = 0
+                if current_line is not None and line != current_line:
+                    delay = 5 # 5 minutes to change lines
                 
-        return results 
+                # When are we ready to leave?
+                ready_to_depart_time = current_arrival_time + delay
+                
+                # Find neighbors (stations next to this one on this line)
+                stations_list = self.lines[line]
+                index = stations_list.index(current_station)
+                
+                neighbors = []
+                if index > 0: 
+                    neighbors.append(stations_list[index-1]) # Previous station
+                if index < len(stations_list) - 1: 
+                    neighbors.append(stations_list[index+1]) # Next station
+                
+                for neighbor in neighbors:
+                    travel_time = self.travel_times[(current_station, neighbor)]
+                    
+                    # Find the direction of the train
+                    if stations_list.index(neighbor) > index:
+                        direction = stations_list[-1] # Going down
+                    else:
+                        direction = stations_list[0]  # Going up
+                    
+                    # Find the next train time
+                    next_train_time = self.get_specific_train_time(line, current_station, direction, ready_to_depart_time)
+                    
+                    if next_train_time:
+                        arrival_at_neighbor = next_train_time + travel_time
+                        
+                        # Record this step
+                        new_step = {
+                            "station": current_station,
+                            "line": line,
+                            "departure": next_train_time,
+                            "next_station": neighbor
+                        }
+                        new_history = history + [new_step]
+                        
+                        paths_to_explore.append((arrival_at_neighbor, neighbor, new_history, line))
+
+        if best_journey:
+            return self.print_journey(best_journey, start_station, end_station)
+        else:
+            return "No route found."
