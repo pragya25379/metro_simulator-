@@ -75,3 +75,30 @@ class MetroSimulator:
             self.travel_times[(station2, station1)] = time_taken
 
         return True
+
+    def get_frequency(self, current_time_minutes):
+        """Returns how often trains come (in minutes) based on the time of day."""
+        # Peak Hours: 8:00 AM - 10:00 AM (480 - 600 minutes)
+        # Peak Hours: 5:00 PM - 7:00 PM (1020 - 1140 minutes)
+        
+        is_morning_peak = (current_time_minutes >= 480 and current_time_minutes < 600)
+        is_evening_peak = (current_time_minutes >= 1020 and current_time_minutes < 1140)
+        
+        if is_morning_peak or is_evening_peak:
+            return 4 # Every 4 minutes
+        else:
+            return 8 # Every 8 minutes
+
+    def get_next_trains(self, line_name, station_name, current_time):
+        """Finds the next train arrival time for a station."""
+        
+        # Check if the station exists on this line
+        if line_name not in self.lines:
+            return []
+        
+        stations_on_line = self.lines[line_name]
+        if station_name not in stations_on_line:
+            return []
+
+        # We need to find trains going in both directions
+        results = []
