@@ -348,6 +348,7 @@ def main():
     print("1. Check Metro Timings")
     print("2. Plan a Journey")
     print("3. Exit")
+    all_stations = [s for stations in sim.lines.values() for s in stations]
     
     while True:
         choice = input("\nEnter your choice (1/2/3): ")
