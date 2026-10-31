@@ -357,6 +357,8 @@ def main():
             line = input("Enter Line (Blue/Magenta): ").strip()
             station = input("Enter Station Name: ").strip()
             time_str = input("Enter Current Time (HH:MM): ").strip()
+            src = match_name(src, all_stations)
+            dst = match_name(dst, all_stations)
             
             current_min = parse_time(time_str)
             if current_min is None:
