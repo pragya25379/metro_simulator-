@@ -17,7 +17,13 @@ def format_time(total_minutes):
     hours = (total_minutes // 60) % 24
     minutes = total_minutes % 60
     # The :02d means "format as a 2-digit number, adding a 0 in front if needed"
+    
     return f"{hours:02d}:{minutes:02d}"
+    def match_name(text, options):
+    for option in options:
+        if option.lower() == text.lower():
+            return option
+    return text
 class MetroSimulator:
     def __init__(self):
         # We will store our data in these dictionaries (like digital address books)
