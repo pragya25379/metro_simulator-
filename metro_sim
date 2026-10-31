@@ -18,3 +18,60 @@ def format_time(total_minutes):
     minutes = total_minutes % 60
     # The :02d means "format as a 2-digit number, adding a 0 in front if needed"
     return f"{hours:02d}:{minutes:02d}"
+class MetroSimulator:
+    def __init__(self):
+        # We will store our data in these dictionaries (like digital address books)
+        self.stations = {}      # Stores station info
+        self.lines = {}         # Stores the list of stations for each line
+        self.travel_times = {}  # Stores time to travel between two stations
+        
+        # Service hours (in minutes from midnight)
+        self.start_time = 6 * 60   # 06:00 AM
+        self.end_time = 23 * 60    # 11:00 PM
+
+    def load_data(self, filename="metro_data.txt"):
+        """Reads the station data from the text file."""
+        try:
+            file = open(filename, 'r')
+            lines = file.readlines()
+            file.close()
+        except:
+            print(f"Error: Could not find file {filename}")
+            return False
+
+        # Loop through each line in the file
+        # We skip the first line because it is just the header
+        for i in range(1, len(lines)):
+            line = lines[i].strip() # Remove extra spaces
+            parts = line.split(',') # Split by comma
+            
+            if len(parts) < 5:
+                continue
+            
+            # Get the data from the line
+            line_name = parts[0].strip()
+            station1 = parts[1].strip()
+            station2 = parts[2].strip()
+            time_taken = int(parts[3].strip())
+            
+            # Add the line to our records if it's new
+            if line_name not in self.lines:
+                self.lines[line_name] = []
+            
+            # Add stations to the line list if they aren't there yet
+            # We are building the list of stations in order
+            current_line_stations = self.lines[line_name]
+            
+            if len(current_line_stations) == 0:
+                current_line_stations.append(station1)
+            
+            # If the last station we added is the same as station1, then station2 is next
+            if current_line_stations[-1] == station1:
+                current_line_stations.append(station2)
+            
+            # Store the travel time between these two stations
+            # We store it both ways: A->B and B->A
+            self.travel_times[(station1, station2)] = time_taken
+            self.travel_times[(station2, station1)] = time_taken
+
+        return True
